@@ -1,0 +1,5 @@
+generate-models:
+	bash ../.opencode/skills/generate-pydantic.sh
+
+validate:
+	bash ../.opencode/skills/validate-contract.sh

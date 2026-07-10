@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # Mock Server (Prism) - Para desarrollo frontend
+  mock:
+    image: stoplight/prism:4
+    working_dir: /app
+    volumes:
+      - ./specs:/specs:ro
+    ports:
+      - "4010:4000"
+    command: mock /specs/openapi.yaml --host 0.0.0.0 --port 4000 --dynamic
+    environment:
+      - LOG_LEVEL=info
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend (FastAPI)
+  backend:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+      - ./specs:/specs:ro
+    ports:
+      - "8000:8000"
+    command: >
+      bash -c "pip install --no-cache-dir fastapi uvicorn[standard] pydantic
+      && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    environment:
+      - DATABRICKS_HOST=${DATABRICKS_HOST}
+      - DATABRICKS_TOKEN=${DATABRICKS_TOKEN}
+      - PYTHONPATH=/app
+      - ENVIRONMENT=development
+    depends_on:
+      - mock
+    restart: unless-stopped
+
+  # Frontend (React + Vite)
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - pnpm-store:/root/.local/share/pnpm/store
+    ports:
+      - "3000:3000"
+    command: >
+      sh -c "corepack enable && corepack prepare pnpm@latest --activate
+      && pnpm install --frozen-lockfile
+      && pnpm dev --host 0.0.0.0"
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:4010  # Apunta al mock por defecto
+      - VITE_MOCK_ENABLED=true
+    depends_on:
+      - mock
+    restart: unless-stopped
+
+volumes:
+  pnpm-store:  # Cache global de pnpm para acelerar builds

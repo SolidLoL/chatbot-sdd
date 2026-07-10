@@ -1,0 +1,22 @@
+# .opencode/models.yaml
+providers:
+  # Modelos gratuitos/cheapos para tareas simples
+  anthropic:
+    apiKey: ${ANTHROPIC_API_KEY}
+    defaultModel: claude-3-5-haiku-20241022 
+  
+  # Para tareas complejas (planificación, arquitectura)
+  openai:
+    apiKey: ${OPENAI_API_KEY}
+    defaultModel: gpt-4o-mini
+
+  # Alternativa: deepseek-chat para tareas generales
+  deepseek:
+    apiKey: ${DEEPSEEK_API_KEY}
+    baseUrl: https://api.deepseek.com/v1
+    defaultModel: deepseek-coder 
+  
+  # Modelos locales (gratis, para pruebas)
+  ollama:
+    baseUrl: http://localhost:11434
+    defaultModel: llama3.1:8b

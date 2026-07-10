@@ -1,0 +1,454 @@
+openapi: 3.1.0
+info:
+  title: Chatbot SDD API
+  version: 1.0.0
+  description: |
+    API para chatbot con RAG usando Spec-Driven Development.
+    
+    ## Características principales
+    - **Streaming SSE**: Respuestas token por token en tiempo real
+    - **RAG con citas**: Cada respuesta incluye fuentes consultadas
+    - **Sesiones persistentes**: Historial de conversaciones
+    - **Feedback**: Sistema de evaluación de respuestas
+    
+    ## Streaming Events
+    El endpoint `/chat` devuelve Server-Sent Events con los siguientes tipos:
+    - `token`: Token de texto generado
+    - `citation`: Fuente RAG consultada
+    - `thinking`: Proceso de razonamiento (opcional)
+    - `done`: Fin del stream
+    - `error`: Error durante el stream
+
+servers:
+  - url: http://localhost:8000
+    description: Desarrollo local
+  - url: https://api.chatbot-sdd.example.com
+    description: Producción
+
+tags:
+  - name: chat
+    description: Endpoints de conversación
+  - name: sessions
+    description: Gestión de sesiones
+  - name: feedback
+    description: Evaluación de respuestas
+  - name: system
+    description: Endpoints de sistema
+
+paths:
+  /v1/chat:
+    post:
+      tags: [chat]
+      operationId: createChatMessage
+      summary: Enviar mensaje y recibir respuesta en streaming
+      description: |
+        Envía un mensaje al chatbot y recibe la respuesta vía Server-Sent Events.
+        El stream incluye tokens, citas RAG y metadatos.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            example:
+              session_id: "sess_abc123"
+              message: "¿Cómo configuro Vector Search en Databricks?"
+              stream: true
+      responses:
+        '200':
+          description: Stream SSE iniciado correctamente
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: |
+                  Stream de eventos SSE. Cada evento tiene formato:
+                  event: <type>
+                  data: <json>
+                  
+              example: |
+                event: thinking
+                data: {"content": "Buscando en documentación de Databricks..."}
+                
+                event: citation
+                data: {"id": "cite_1", "title": "Vector Search Guide", "url": "https://docs.databricks.com/vector-search", "snippet": "Vector Search permite..."}
+                
+                event: token
+                data: {"content": "Para configurar"}
+                
+                event: token
+                data: {"content": " Vector Search..."}
+                
+                event: done
+                data: {"message_id": "msg_xyz789", "usage": {"prompt_tokens": 150, "completion_tokens": 89}}
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '502':
+          $ref: '#/components/responses/UpstreamError'
+        '503':
+          $ref: '#/components/responses/ContentFiltered'
+
+  /v1/sessions:
+    get:
+      tags: [sessions]
+      operationId: listSessions
+      summary: Listar sesiones del usuario
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Lista de sesiones
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/sessions/{session_id}:
+    parameters:
+      - name: session_id
+        in: path
+        required: true
+        schema:
+          type: string
+        example: "sess_abc123"
+    get:
+      tags: [sessions]
+      operationId: getSession
+      summary: Obtener sesión con historial completo
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sesión con mensajes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [sessions]
+      operationId: deleteSession
+      summary: Eliminar sesión
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Sesión eliminada
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/feedback:
+    post:
+      tags: [feedback]
+      operationId: submitFeedback
+      summary: Enviar feedback sobre una respuesta
+      description: |
+        Permite al usuario calificar una respuesta del chatbot.
+        Usado para evaluación continua del modelo (Mosaic AI Evaluation).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackRequest'
+            example:
+              message_id: "msg_xyz789"
+              rating: "positive"
+              comment: "Respuesta muy clara y con buenas citas"
+      responses:
+        '201':
+          description: Feedback registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/health:
+    get:
+      tags: [system]
+      operationId: healthCheck
+      summary: Health check del servicio
+      responses:
+        '200':
+          description: Servicio operativo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT obtenido del Identity Provider (Auth0, Entra ID, etc.)
+
+  schemas:
+    ChatRequest:
+      type: object
+      required: [message]
+      properties:
+        session_id:
+          type: string
+          description: ID de sesión existente. Si no se provee, se crea una nueva.
+          example: "sess_abc123"
+        message:
+          type: string
+          minLength: 1
+          maxLength: 4000
+          description: Mensaje del usuario
+          example: "¿Cómo configuro Vector Search?"
+        stream:
+          type: boolean
+          default: true
+          description: Si true, responde vía SSE. Si false, respuesta completa en JSON.
+
+    Message:
+      type: object
+      required: [id, role, content, created_at]
+      properties:
+        id:
+          type: string
+          example: "msg_xyz789"
+        role:
+          type: string
+          enum: [user, assistant, system]
+        content:
+          type: string
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Citation'
+          description: Fuentes RAG citadas (solo para assistant)
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Metadatos adicionales (tokens usados, latencia, etc.)
+        created_at:
+          type: string
+          format: date-time
+
+    Citation:
+      type: object
+      required: [id, title]
+      properties:
+        id:
+          type: string
+          example: "cite_1"
+        title:
+          type: string
+          example: "Vector Search Guide"
+        url:
+          type: string
+          format: uri
+          example: "https://docs.databricks.com/vector-search"
+        snippet:
+          type: string
+          description: Fragmento relevante del documento
+        relevance_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Score de relevancia del documento
+
+    Session:
+      type: object
+      required: [id, created_at, messages]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          description: Título auto-generado de la sesión
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    SessionList:
+      type: object
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SessionSummary'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+
+    SessionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        message_count:
+          type: integer
+        last_message_at:
+          type: string
+          format: date-time
+
+    FeedbackRequest:
+      type: object
+      required: [message_id, rating]
+      properties:
+        message_id:
+          type: string
+        rating:
+          type: string
+          enum: [positive, negative, neutral]
+        comment:
+          type: string
+          maxLength: 1000
+
+    FeedbackResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [registered]
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        version:
+          type: string
+        dependencies:
+          type: object
+          properties:
+            databricks:
+              type: string
+              enum: [up, down]
+            vector_search:
+              type: string
+              enum: [up, down]
+
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Código de error machine-readable
+          example: "INVALID_REQUEST"
+        message:
+          type: string
+          description: Mensaje descriptivo para el usuario
+        details:
+          type: object
+          additionalProperties: true
+          description: Detalles adicionales del error
+
+  responses:
+    BadRequest:
+      description: Petición inválida
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "INVALID_REQUEST"
+            message: "El mensaje no puede estar vacío"
+
+    Unauthorized:
+      description: No autenticado o token inválido
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "UNAUTHORIZED"
+            message: "Token JWT inválido o expirado"
+
+    NotFound:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "NOT_FOUND"
+            message: "La sesión no existe"
+
+    RateLimited:
+      description: Límite de peticiones excedido
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+            description: Timestamp Unix cuando se resetea el límite
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "RATE_LIMITED"
+            message: "Has excedido el límite de 60 peticiones por minuto"
+
+    UpstreamError:
+      description: Error en servicio upstream (Databricks)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "UPSTREAM_ERROR"
+            message: "El servicio de IA no está disponible"
+
+    ContentFiltered:
+      description: Respuesta bloqueada por filtro de seguridad
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "CONTENT_FILTERED"
+            message: "La respuesta fue bloqueada por políticas de seguridad"
