@@ -1,26 +1,26 @@
 {
   "mcpServers": {
     "filesystem": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/app"]
+      "command": "pnpm",
+      "args": ["dlx", "-y", "@modelcontextprotocol/server-filesystem", "/app"]
     },
     "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "command": "pnpm",
+      "args": ["dlx", "-y", "@modelcontextprotocol/server-github"],
       "env": {
         "GITHUB_TOKEN": "${GITHUB_TOKEN}"
       }
     },
     "postgres": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "command": "pnpm",
+      "args": ["dlx", "-y", "@modelcontextprotocol/server-postgres"],
       "env": {
         "DATABASE_URL": "${DATABASE_URL}"
       }
     },
     "memory": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-memory"]
+      "command": "pnpm",
+      "args": ["dlx", "-y", "@modelcontextprotocol/server-memory"]
     }
   }
 }
