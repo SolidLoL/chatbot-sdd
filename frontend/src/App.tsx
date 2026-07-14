@@ -113,7 +113,17 @@ function App() {
           </ul>
         </div>
       </section>
-
+      
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-lg">
+          <h1 className="text-3xl font-bold text-primary-600 mb-4">
+            Tailwind v4 Funcionando
+          </h1>
+          <p className="text-gray-600">
+            Si ves este texto con estilos, Tailwind está configurado correctamente.
+          </p>
+        </div>
+      </div>
       <div className="ticks"></div>
       <section id="spacer"></section>
     </>
