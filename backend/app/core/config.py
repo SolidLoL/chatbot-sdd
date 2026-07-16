@@ -24,12 +24,18 @@ class Settings(BaseSettings):
     MODEL_SERVING_ENDPOINT: str = ""
     
     # Auth
-    JWT_SECRET: str = "change-me-in-production"
+    # JWT_SECRET debe venir de entorno en producción. Si no se define, se genera
+    # una clave aleatoria segura (32 bytes) para desarrollo único. Nunca hardcodear.
+    import os
+    import secrets
+
+    JWT_SECRET: str = os.environ.get("JWT_SECRET", secrets.token_urlsafe(32))
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRATION_HOURS: int = 24
     
     # Rate Limiting
     RATE_LIMIT_PER_MINUTE: int = 60
+    RATE_LIMIT_WINDOW_SECONDS: float = 60.0
     
     class Config:
         env_file = ".env"

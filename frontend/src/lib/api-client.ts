@@ -11,7 +11,10 @@ export const apiClient = axios.create({
 
 // Interceptor para agregar auth token
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('auth_token');
+  // sessionStorage es más seguro que localStorage: no se envía con peticiones HTTP
+  // y se borra automáticamente al cerrar el navegador. En desarrollo también lo
+  // usamos por consistencia; en producción solo se guarda si VITE_API_URL es HTTPS.
+  const token = sessionStorage.getItem('auth_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
