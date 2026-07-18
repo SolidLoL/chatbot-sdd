@@ -23,6 +23,16 @@ logger = structlog.get_logger()
 router = APIRouter()
 
 
+async def setup():
+    """Inicializa el módulo de autenticación"""
+    logger.info("Auth module initialized")
+
+
+async def teardown():
+    """Limpia recursos del módulo de autenticación"""
+    logger.info("Auth module shutdown")
+
+
 async def validate_token(token: str) -> dict | None:
     """
     Valida un token JWT y extrae la información del usuario.

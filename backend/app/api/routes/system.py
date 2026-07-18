@@ -47,4 +47,3 @@ async def health_check():
             "vector_search": vector_search_status,
         }
     }
-    }
