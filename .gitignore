@@ -1,2 +1,5 @@
 .env
 /*.env
+backend/.env
+backend/**/__pycache__/
+backend/**/**/__pycache__/
