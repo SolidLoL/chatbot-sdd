@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import AnyUrl, AwareDatetime, BaseModel, Field, confloat, constr
@@ -27,7 +27,7 @@ class ChatRequest(BaseModel):
     """
 
 
-class Role(str, Enum):
+class Role(StrEnum):
     user = 'user'
     assistant = 'assistant'
     system = 'system'
@@ -56,7 +56,7 @@ class SessionSummary(BaseModel):
     last_message_at: AwareDatetime | None = None
 
 
-class Rating(        str, Enum):
+class Rating(StrEnum):
     positive = 'positive'
     negative = 'negative'
     neutral = 'neutral'
@@ -68,7 +68,7 @@ class FeedbackRequest(BaseModel):
     comment: constr(max_length=1000) | None = None
 
 
-class Status(        str, Enum):
+class Status(StrEnum):
     registered = 'registered'
 
 
@@ -77,13 +77,13 @@ class FeedbackResponse(BaseModel):
     status: Status | None = None
 
 
-class Status1(        str, Enum):
+class Status1(StrEnum):
     healthy = 'healthy'
     degraded = 'degraded'
     unhealthy = 'unhealthy'
 
 
-class Databricks(        str, Enum):
+class Databricks(StrEnum):
     up = 'up'
     down = 'down'
 
