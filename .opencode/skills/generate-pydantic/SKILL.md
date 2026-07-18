@@ -15,7 +15,7 @@ bash .opencode/skills/generate-pydantic/generate-pydantic.sh
 
 ## What it does
 
-1. Runs `datamodel-code-generator` against the OpenAPI spec
+1. Runs `datamodel-codegen` against the OpenAPI spec
 2. Outputs Pydantic v2 models to `backend/models/generated.py`
 3. Creates `backend/models/__init__.py` re-exporting all models
 

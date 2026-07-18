@@ -14,7 +14,7 @@ pnpm dlx swagger-cli validate specs/openapi.yaml || {
 
 # 2. Genera modelos Pydantic
 echo "🐍 Generando modelos Pydantic..."
-bash .opencode/skills/generate-pydantic.sh
+bash .opencode/skills/generate-pydantic/generate-pydantic.sh
 
 # 3. Genera tipos TypeScript
 echo "📘 Generando tipos TypeScript..."
