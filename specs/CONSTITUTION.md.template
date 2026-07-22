@@ -1,0 +1,63 @@
+# Project Constitution
+
+> Governing principles, values, and development guidelines for chatbot-sdd.
+
+## Mission & Vision
+
+_What problem does this project solve? What is the long-term vision?_
+
+## Core Values
+
+- _e.g., Simplicity over complexity_
+- _e.g., Security by design_
+- _e.g., Testable by default_
+- _e.g., Iterate fast, validate often_
+
+## Architecture Principles
+
+- _e.g., OpenAPI-first: spec drives all interfaces_
+- _e.g., Stateless backend, state managed by client/database_
+- _e.g., Streaming-first for AI responses_
+- _e.g., Separate concerns: API layer, service layer, data layer_
+
+## Tech Stack Rationale
+
+| Layer | Choice | Rationale |
+|---|---|---|
+| Backend | FastAPI + Python | Async-native, OpenAPI generation, strong typing via Pydantic |
+| Frontend | React + TypeScript | Component ecosystem, type safety, SSE support |
+| AI SDK | Databricks SDK | Primary AI provider integration |
+| Auth | JWT + python-jose | Stateless, simple, standard |
+| Spec | OpenAPI 3.1 | Contract-first, language-agnostic |
+| Database | _(TBD)_ | |
+
+## Code Standards
+
+- Type hints everywhere (Python: mypy strict, TS: strict mode)
+- Imports: stdlib → third-party → local (grouped, sorted)
+- Naming: `snake_case` (Python), `camelCase` (TS), `PascalCase` (classes/components)
+- Max line length: 100
+- Docstrings: Google style for public APIs only
+- No commented-out code — delete it
+
+## Testing Philosophy
+
+- Contract tests validate OpenAPI compliance
+- Unit tests for services/utils
+- Integration tests for API routes
+- AI evaluation suite for chatbot quality (golden dataset)
+- Coverage target: >80%
+
+## Development Workflow
+
+- Branch: `main` (stable), feature branches off `main`
+- PRs require passing CI + review
+- Semantic commits: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`
+- spec changes go through `speckit.specify` → `speckit.plan` → implementation
+- ADRs for significant decisions
+
+## Decision Log
+
+| Date | Decision | Rationale |
+|---|---|---|
+| | | |
