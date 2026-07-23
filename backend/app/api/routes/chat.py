@@ -5,6 +5,7 @@ from typing import AsyncGenerator
 
 from app.models.generated import ChatRequest, Message, Citation
 from app.core.security import get_current_user
+from app.api.deps import get_chat_service, get_session_service
 from app.services.chat_service import ChatService
 from app.services.session_service import SessionService
 
@@ -16,8 +17,8 @@ router = APIRouter()
 async def create_chat_message(
     request: ChatRequest,
     current_user: dict = Depends(get_current_user),
-    chat_service: ChatService = Depends(),
-    session_service: SessionService = Depends(),
+    chat_service: ChatService = Depends(get_chat_service),
+    session_service: SessionService = Depends(get_session_service),
 ):
     """
     Envía un mensaje y recibe respuesta en streaming SSE.

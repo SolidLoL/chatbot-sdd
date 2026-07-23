@@ -1,13 +1,19 @@
-from app.services.chat_service import ChatService
-from app.services.session_service import SessionService
+import structlog
 
-# Singleton para el servicio de sesiones (en memoria para desarrollo)
-_session_service_instance = SessionService()
+logger = structlog.get_logger()
 
 
-def get_chat_service() -> ChatService:
+def get_chat_service():
+    from app.services.chat_service import ChatService
     return ChatService()
 
 
-def get_session_service() -> SessionService:
-    return _session_service_instance
+async def get_session_service():
+    from app.services.session_service import SessionService
+    try:
+        from app.core.database import get_pool
+        pool = await get_pool()
+        return SessionService(pool)
+    except Exception as e:
+        logger.warning("Database unavailable, using in-memory fallback", error=str(e))
+        return SessionService(pool=None)

@@ -10,14 +10,25 @@ security = HTTPBearer()
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
 ) -> dict:
     """Valida JWT y extrae información del usuario"""
+    if settings.DEMO_MODE:
+        return {
+            "user_id": "demo_user",
+            "email": "demo@example.com",
+            "roles": ["user"],
+        }
+
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Autenticación requerida",
+        )
+
     token = credentials.credentials
-    
+
     try:
-        # En producción, valida contra tu Identity Provider
-        # Por ahora, solo decodifica el token (mock para desarrollo)
         payload = jwt.decode(
             token,
             settings.JWT_SECRET,
@@ -30,7 +41,7 @@ async def get_current_user(
                 detail="Token inválido",
             )
         return {"user_id": user_id, "email": payload.get("email")}
-    
+
     except JWTError as e:
         logger.warning("JWT validation failed", error=str(e))
         raise HTTPException(

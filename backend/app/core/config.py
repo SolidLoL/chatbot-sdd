@@ -33,6 +33,12 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRATION_HOURS: int = 24
 
+    # Database
+    DATABASE_URL: str = "postgresql+asyncpg://chatbot:chatbot@localhost:5432/chatbot"
+
+    # Demo mode — when True, auth returns a default user without requiring token
+    DEMO_MODE: bool = True
+
     # Rate Limiting
     RATE_LIMIT_PER_MINUTE: int = 60
     RATE_LIMIT_WINDOW_SECONDS: float = 60.0

@@ -3,6 +3,7 @@ from typing import Optional
 import structlog
 
 from app.core.security import get_current_user
+from app.api.deps import get_session_service
 from app.services.session_service import SessionService
 
 logger = structlog.get_logger()
@@ -35,7 +36,7 @@ async def list_sessions(
 async def get_session(
     session_id: str,
     current_user: dict = Depends(get_current_user),
-    session_service: SessionService = Depends(),
+    session_service: SessionService = Depends(get_session_service),
 ):
     """Obtiene una sesión con su historial"""
     session = await session_service.get_session(session_id)
@@ -59,7 +60,7 @@ async def get_session(
 async def delete_session(
     session_id: str,
     current_user: dict = Depends(get_current_user),
-    session_service: SessionService = Depends(),
+    session_service: SessionService = Depends(get_session_service),
 ):
     """Elimina una sesión"""
     session = await session_service.get_session(session_id)
