@@ -1,5 +1,7 @@
 .env
 /*.env
 backend/.env
+.env.docker
 backend/**/__pycache__/
 backend/**/**/__pycache__/
+graphify-out/**
